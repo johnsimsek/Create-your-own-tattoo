@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Tattoo Preview</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Allura&family=Dancing+Script:wght@400;700&family=Great+Vibes&family=IM+Fell+English&family=Parisienne&family=Pinyon+Script&family=Playfair+Display:wght@400;700&family=Sacramento&display=swap"
+    rel="stylesheet"
+  >
+  <link href="https://db.onlinewebfonts.com/c/6ca701b826616984ae2b27f6af995dbe?family=Canterbury" rel="stylesheet">
+
+  <style>
+    /* ZOOMED OUT FURTHER: Sizes reduced by another ~5-10% */
+    :root{
+      --pad: clamp(8px, 2vw, 15px);
+      --radius: 10px;
+      --h1: clamp(14px, 3.5vw, 16px);
+      --label: 11.5px;
+      --sub: 9.5px;
+      --btn: 12px;
+      --overlayText: clamp(24px, 5.5vw, 32px);
+    }
+
+    *{ box-sizing:border-box; }
+    html, body{ height:100%; }
+    body{
+      font-family:Arial,sans-serif;
+      background:#fff;
+      color:#000;
+      margin:0;
+      padding:0;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    .container{
+      width:100%;
+      padding: var(--pad);
+      margin:0 auto;
+    }
+
+    h1{ margin:0 0 8px 0; font-size:var(--h1); }
+
+    label{
+      display:block;
+      margin:8px 0 4px 0;
+      font-weight:800;
+      font-size: var(--label);
+    }
+
+    .sub{
+      display:block;
+      font-weight:600;
+      color:#666;
+      font-size:var(--sub);
+      margin-top:4px;
+      line-height:1.32;
+    }
+
+    input[type=file]{ width:100%; font-size: 11px; }
+
+    .btn{
+      background:linear-gradient(to right,blue,pink,purple);
+      border:none; color:white;
+      padding:10px; width:100%;
+      font-size:var(--btn);
+      border-radius:10px;
+      cursor:pointer; margin-top:8px;
+      display: block;
+    }
+    .btn.secondary{ background:#111; }
+    .btn:disabled{ opacity:.6; cursor:not-allowed; }
+
+    .action-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .action-row .btn {
+      margin-top: 0;
+      flex: 1;
+    }
+
+    #editorTools { display:none; }
+
+    /* Compact Stretch Controls */
+    #stretchControls {
+      display: none; 
+      background: #f4f0ff;
+      padding: 8px 10px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      border: 1px solid #d8ccff;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .stretch-header {
+      font-size: 11px;
+      font-weight: 800;
+      color: #111;
+      margin: 0;
+    }
+    .stretch-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+    }
+    .stretch-row label {
+      margin: 0;
+      font-size: 11px;
+      font-weight: 800;
+      width: 14px;
+      text-align: center;
+      color: #7a4dff;
+    }
+    .stretch-row input[type=range] {
+      flex-grow: 1;
+      margin: 0;
+      height: 4px;
+      accent-color: #7a4dff;
+    }
+
+    #previewStage{
+      position:relative;
+      width:100%;
+      margin-top:10px;
+      border:1px solid #ccc;
+      overflow:hidden;
+      border-radius: var(--radius);
+      background:#fafafa;
+      min-height: 50vh;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    #bodyPlacementPreview{
+      width:100%;
+      height:auto;
+      display:block;
+      user-select:none;
+      -webkit-user-drag:none;
+      pointer-events:none;
+    }
+
+    .overlay{
+      position:absolute;
+      top:50%;
+      left:50%;
+      transform:translate(-50%,-50%) translate(0px,0px) rotate(0deg) scale(1, 1);
+      will-change:transform;
+      user-select:none;
+      -webkit-user-drag:none;
+      touch-action: auto; 
+      border-radius: 8px;
+    }
+
+    .overlay.active-overlay {
+      outline: none; 
+      touch-action: none; 
+    }
+
+    canvas.tattooCanvas{
+      width:120px; /* Zoomed out further */
+      height:auto;
+      border-radius:8px;
+      mix-blend-mode:multiply;
+      filter:grayscale(100%);
+      background:transparent;
+      pointer-events:auto;
+      display: block;
+    }
+
+    .textOverlay{
+      color:#111;
+      opacity:.88;
+      padding:4px 8px;
+      border-radius:8px;
+      background:rgba(255,255,255,.10);
+      white-space:pre;
+      line-height:1.05;
+      font-size: var(--overlayText);
+      mix-blend-mode:multiply;
+      filter:grayscale(100%);
+      pointer-events:auto;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .modalBackdrop{
+      position:fixed; inset:0;
+      background:rgba(0,0,0,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: var(--pad);
+      z-index:9999;
+      overflow:auto;
+      -webkit-overflow-scrolling:touch;
+    }
+
+    .modal{
+      width:100%;
+      max-width:720px;
+      background:#fff;
+      border-radius:12px;
+      padding:12px;
+      max-height: 88vh;
+      overflow:auto;
+      -webkit-overflow-scrolling:touch;
+    }
+
+    .modalHeader{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      position:sticky;
+      top:0;
+      background:#fff;
+      padding-bottom:8px;
+      z-index:2;
+    }
+    .modalHeader h2{ margin:0; font-size:14px; }
+
+    .close{
+      border:none;
+      background:#eee;
+      border-radius:8px;
+      padding:6px 8px;
+      cursor:pointer;
+      font-weight:900;
+      font-size:12px;
+    }
+
+    textarea{
+      width:100%;
+      padding:8px;
+      border:1px solid #ddd;
+      border-radius:8px;
+      font-size:11px;
+      min-height:48px;
+      margin-top:8px;
+      resize:vertical;
+    }
+
+    .fontGrid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+      margin-top:10px;
+      max-height: 42vh;
+      overflow:auto;
+      -webkit-overflow-scrolling:touch;
+    }
+
+    .fontCard{
+      border:1px solid #ddd;
+      border-radius:8px;
+      padding:8px;
+      cursor:pointer;
+      background:#fafafa;
+      transition:transform .06s ease;
+      user-select:none;
+    }
+    .fontCard:active{ transform:scale(.99); }
+    .fontName{
+      font-size:9px;
+      color:#666;
+      margin-bottom:4px;
+      font-weight:900;
+      letter-spacing:.4px;
+      text-transform:uppercase;
+    }
+    .fontPreview{
+      font-size:18px;
+      line-height:1.1;
+      color:#111;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .selectedFont{ border:2px solid #7a4dff; background:#f4f0ff; }
+    .modalActions{ display:flex; gap:8px; margin-top:10px; }
+    .modalActions .btn{ margin-top:0; }
+
+    @media (max-width: 480px){
+      .fontGrid{ grid-template-columns: 1fr; }
+      canvas.tattooCanvas{ width: 110px; }
+      #previewStage{ min-height: 50vh; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Tattoo Preview / Tatuoinnin esikatselu</h1>
+
+    <label>
+      Upload Body Placement Image
+      <span class="sub">
+        <strong>Lataa kehon kuva</strong> – kuva siitä kohdasta mihin tatuointi tulee (esim. käsivarsi, ranne, jalka).<br>
+        Vinkki: ota kuva hyvässä valossa, suoraan edestä.
+      </span>
+    </label>
+    <input type="file" id="bodyPlacement" accept="image/*" />
+
+    <label>
+      Upload Tattoo Reference Images (optional)
+      <span class="sub">
+        <strong>Lataa tatuointikuvat - ideat / inspiraatiokuvat.</strong><br>
+        Voit valita useita kuvia. Inspiraatiota löytyy esim. Pinterestistä.
+      </span>
+    </label>
+    <input type="file" id="tattooReferences" accept="image/*" multiple />
+
+    <button class="btn" type="button" id="createBtn">
+      Create Preview <span class="sub" style="color:rgba(255,255,255,.85)">Luo esikatselu</span>
+    </button>
+
+    <div id="previewStage" style="display:none;"></div>
+
+    <div id="editorTools">
+      
+      <!-- STRETCH SECTION AT THE TOP -->
+      <div id="stretchControls">
+        <div class="stretch-header">Stretch / Venytä</div>
+        <div class="stretch-row">
+          <label>W</label>
+          <input type="range" id="stretchX" min="0.3" max="3" step="0.05" value="1" />
+        </div>
+        <div class="stretch-row">
+          <label>H</label>
+          <input type="range" id="stretchY" min="0.3" max="3" step="0.05" value="1" />
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn secondary" type="button" id="addTextAskBtn">
+          + Add Text
+        </button>
+        <button class="btn secondary" type="button" id="addMoreAskBtn">
+          + Add Image
+        </button>
+      </div>
+      
+      <input type="file" id="addMoreInput" accept="image/*" multiple style="display:none;" />
+      
+      <span class="sub" style="margin-top: 10px;">
+        <strong>Ohje:</strong> Paina kuvaa valitaksesi sen. <strong>Vain valittua kuvaa voi siirtää.</strong> Näin sivu rullaa normaalisti, kun kosket taustaa! Tuplanapauta poistaaksesi kuvan.
+      </span>
+
+      <div class="action-row">
+        <button class="btn secondary" type="button" id="clearLayersBtn">
+          Clear
+        </button>
+        <button class="btn" type="button" id="saveBtn">
+          Save Image
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="modalBackdrop" id="modalBackdrop">
+    <div class="modal">
+      <div class="modalHeader">
+        <h2>Add Text / Lisää teksti</h2>
+        <button class="close" id="closeModalBtn">✕</button>
+      </div>
+
+      <textarea id="textInput" placeholder="Type text... / Kirjoita teksti..."></textarea>
+      <div class="fontGrid" id="fontGrid"></div>
+
+      <div class="modalActions">
+        <button class="btn secondary" type="button" id="cancelBtn">Cancel / Peru</button>
+        <button class="btn" type="button" id="addTextBtn">Add Text / Lisää teksti</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const stage = document.getElementById("previewStage");
+    const editorTools = document.getElementById("editorTools");
+
+    const bodyInput = document.getElementById("bodyPlacement");
+    const tattooInput = document.getElementById("tattooReferences");
+    const createBtn = document.getElementById("createBtn");
+    const saveBtn = document.getElementById("saveBtn");
+    const clearLayersBtn = document.getElementById("clearLayersBtn");
+
+    const addTextAskBtn = document.getElementById("addTextAskBtn");
+    const addMoreAskBtn = document.getElementById("addMoreAskBtn");
+    const addMoreInput = document.getElementById("addMoreInput");
+    
+    const stretchControls = document.getElementById("stretchControls");
+    const stretchXInput = document.getElementById("stretchX");
+    const stretchYInput = document.getElementById("stretchY");
+    let activeOverlay = null;
+
+    const modalBackdrop = document.getElementById("modalBackdrop");
+    const closeModalBtn = document.getElementById("closeModalBtn");
+    const cancelBtn = document.getElementById("cancelBtn");
+    const addTextBtn = document.getElementById("addTextBtn");
+    const textInput = document.getElementById("textInput");
+    const fontGrid = document.getElementById("fontGrid");
+
+    const FONTS = [
+      { name: "Great Vibes", family: "Great Vibes, cursive" },
+      { name: "Dancing Script", family: "Dancing Script, cursive" },
+      { name: "Sacramento", family: "Sacramento, cursive" },
+      { name: "Allura", family: "Allura, cursive" },
+      { name: "Alex Brush", family: "Alex Brush, cursive" },
+      { name: "Parisienne", family: "Parisienne, cursive" },
+      { name: "Pinyon Script", family: "Pinyon Script, cursive" },
+      { name: "Canterbury", family: "Canterbury, serif" },
+      { name: "IM Fell English", family: "IM Fell English, serif" },
+      { name: "Playfair Display", family: "Playfair Display, serif" }
+    ];
+    let selectedFontFamily = FONTS[0].family;
+
+    // --- NEW INDEXED DB SAVING SYSTEM (Bypasses 5MB Limit) ---
+    function initDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open("TattooPreviewDB", 1);
+        req.onupgradeneeded = e => {
+          e.target.result.createObjectStore("projects");
+        };
+        req.onsuccess = e => resolve(e.target.result);
+        req.onerror = e => reject(e.target.error);
+      });
+    }
+
+    async function saveProject() {
+      const base = document.getElementById("bodyPlacementPreview");
+      if (!base) {
+        try {
+          const db = await initDB();
+          db.transaction("projects", "readwrite").objectStore("projects").delete("current");
+        } catch(e){}
+        return;
+      }
+      
+      const overlays = Array.from(stage.querySelectorAll(".overlay"));
+      const items = overlays.map(wrap => {
+        const tx = wrap.dataset.tx || 0;
+        const ty = wrap.dataset.ty || 0;
+        const ts = wrap.dataset.ts || 1;
+        const tr = wrap.dataset.tr || 0;
+        const sx = wrap.dataset.sx || 1; 
+        const sy = wrap.dataset.sy || 1; 
+        
+        const textEl = wrap.querySelector(".textOverlay");
+        const canvasEl = wrap.querySelector("canvas.tattooCanvas");
+        
+        if (textEl) {
+          return { type: 'text', text: textEl.textContent, fontFamily: textEl.dataset.fontFamily, tx, ty, ts, tr, sx, sy };
+        } else if (canvasEl) {
+          return { type: 'image', src: canvasEl.toDataURL("image/png"), tx, ty, ts, tr, sx, sy };
+        }
+      });
+
+      // Saving original high quality to IndexedDB
+      const c = document.createElement("canvas");
+      c.width = base.naturalWidth; 
+      c.height = base.naturalHeight;
+      c.getContext("2d", { alpha: false }).drawImage(base, 0, 0);
+      const bodyDataUrl = c.toDataURL("image/jpeg", 0.95);
+
+      try {
+        const db = await initDB();
+        db.transaction("projects", "readwrite").objectStore("projects").put({ body: bodyDataUrl, items }, "current");
+      } catch (e) {
+        console.error("Failed to save to database.", e);
+      }
+    }
+
+    async function loadProject() {
+      try {
+        const db = await initDB();
+        const req = db.transaction("projects", "readonly").objectStore("projects").get("current");
+        
+        req.onsuccess = async (e) => {
+          const data = e.target.result;
+          if (!data || !data.body) return;
+          
+          stage.innerHTML = "";
+          setActiveOverlay(null);
+          
+          const base = document.createElement("img");
+          base.src = data.body;
+          base.id = "bodyPlacementPreview";
+          stage.appendChild(base);
+          await waitImageLoad(base);
+          
+          for (const item of data.items) {
+            if (!item) continue;
+            const wrap = document.createElement("div");
+            wrap.className = "overlay";
+            wrap.dataset.tx = item.tx;
+            wrap.dataset.ty = item.ty;
+            wrap.dataset.ts = item.ts;
+            wrap.dataset.tr = item.tr;
+            wrap.dataset.sx = item.sx || 1; 
+            wrap.dataset.sy = item.sy || 1; 
+            applyTransform(wrap);
+            
+            if (item.type === 'text') {
+              const layer = document.createElement("div");
+              layer.className = "textOverlay";
+              layer.textContent = item.text;
+              layer.style.fontFamily = item.fontFamily;
+              layer.dataset.fontFamily = item.fontFamily;
+              wrap.appendChild(layer);
+            } else if (item.type === 'image') {
+              const img = new Image();
+              img.src = item.src;
+              await waitImageLoad(img);
+              
+              const c = document.createElement("canvas");
+              c.width = img.naturalWidth; 
+              c.height = img.naturalHeight;
+              c.className = "tattooCanvas";
+              c.getContext("2d").drawImage(img, 0, 0);
+              wrap.appendChild(c);
+            }
+            stage.appendChild(wrap);
+          }
+          
+          stage.style.display = "block";
+          editorTools.style.display = "block";
+        };
+      } catch (e) {
+        console.error("Failed to restore saved project", e);
+      }
+    }
+    // ------------------------------------------------
+
+    function initTransform(el) {
+      el.dataset.tx = "0";
+      el.dataset.ty = "0";
+      el.dataset.ts = "1";
+      el.dataset.tr = "0";
+      el.dataset.sx = "1"; 
+      el.dataset.sy = "1"; 
+      applyTransform(el);
+    }
+    
+    function applyTransform(el) {
+      const x = Number(el.dataset.tx || 0);
+      const y = Number(el.dataset.ty || 0);
+      const s = Number(el.dataset.ts || 1);
+      const sx = Number(el.dataset.sx || 1);
+      const sy = Number(el.dataset.sy || 1);
+      const r = Number(el.dataset.tr || 0);
+      el.style.transform = `translate(-50%,-50%) translate(${x}px,${y}px) rotate(${r}deg) scale(${s * sx}, ${s * sy})`;
+    }
+
+    function setActiveOverlay(overlay) {
+      if (activeOverlay) {
+        activeOverlay.classList.remove("active-overlay");
+      }
+      activeOverlay = overlay;
+      
+      if (activeOverlay) {
+        activeOverlay.classList.add("active-overlay");
+        stretchControls.style.display = "flex"; 
+        stretchXInput.value = activeOverlay.dataset.sx || 1;
+        stretchYInput.value = activeOverlay.dataset.sy || 1;
+      } else {
+        stretchControls.style.display = "none";
+      }
+    }
+
+    stretchXInput.addEventListener("input", (e) => {
+      if (!activeOverlay) return;
+      activeOverlay.dataset.sx = e.target.value;
+      applyTransform(activeOverlay);
+    });
+    stretchXInput.addEventListener("change", saveProject);
+
+    stretchYInput.addEventListener("input", (e) => {
+      if (!activeOverlay) return;
+      activeOverlay.dataset.sy = e.target.value;
+      applyTransform(activeOverlay);
+    });
+    stretchYInput.addEventListener("change", saveProject);
+
+    const pointers = new Map();
+    let gestureTarget = null;
+    let startState = null;
+    let lastTapTime = 0;
+    let lastTapTarget = null;
+
+    function dist(a,b){ return Math.hypot(b.x-a.x, b.y-a.y); }
+    function ang(a,b){ return Math.atan2(b.y-a.y, b.x-a.x); }
+
+    function beginGesture(target) {
+      gestureTarget = target;
+      const tx = Number(target.dataset.tx || 0);
+      const ty = Number(target.dataset.ty || 0);
+      const ts = Number(target.dataset.ts || 1);
+      const tr = Number(target.dataset.tr || 0);
+
+      const pts = Array.from(pointers.values());
+      startState = { tx, ty, ts, tr, p1: pts[0] || null, p2: pts[1] || null, d: null, a: null };
+
+      if (startState.p1 && startState.p2) {
+        startState.d = dist(startState.p1, startState.p2);
+        startState.a = ang(startState.p1, startState.p2);
+      }
+    }
+
+    function updateGesture() {
+      if (!gestureTarget || !startState) return;
+      const pts = Array.from(pointers.values());
+      if (pts.length === 0) return;
+
+      if (pts.length === 1) {
+        const p = pts[0];
+        const dx = p.x - startState.p1.x;
+        const dy = p.y - startState.p1.y;
+        gestureTarget.dataset.tx = String(startState.tx + dx);
+        gestureTarget.dataset.ty = String(startState.ty + dy);
+        applyTransform(gestureTarget);
+        return;
+      }
+
+      const p1 = pts[0], p2 = pts[1];
+      const d = dist(p1,p2);
+      const a = ang(p1,p2);
+
+      const scale = startState.d ? (d / startState.d) : 1;
+      const rot = startState.a != null ? ((a - startState.a) * 180 / Math.PI) : 0;
+
+      gestureTarget.dataset.ts = String(Math.max(0.15, Math.min(8, startState.ts * scale)));
+      gestureTarget.dataset.tr = String(startState.tr + rot);
+      applyTransform(gestureTarget);
+    }
+
+    stage.addEventListener("pointerdown", (e) => {
+      const overlay = e.target.closest ? e.target.closest(".overlay") : null;
+      
+      if (!overlay) {
+        setActiveOverlay(null); 
+        return; 
+      }
+
+      const now = Date.now();
+      if (pointers.size === 0 && lastTapTarget === overlay && (now - lastTapTime) < 300) {
+        if(activeOverlay === overlay) setActiveOverlay(null);
+        overlay.remove();
+        gestureTarget = null;
+        pointers.clear();
+        saveProject(); 
+        return;
+      }
+      lastTapTime = now;
+      lastTapTarget = overlay;
+
+      if (activeOverlay !== overlay) {
+        setActiveOverlay(overlay);
+        return; 
+      }
+
+      e.preventDefault(); 
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      
+      if (!gestureTarget) {
+        gestureTarget = overlay;
+      }
+      beginGesture(gestureTarget);
+      try { stage.setPointerCapture(e.pointerId); } catch(err){}
+    }, { passive:false });
+
+    stage.addEventListener("pointermove", (e) => {
+      if (!pointers.has(e.pointerId)) return;
+      e.preventDefault();
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      updateGesture();
+    }, { passive:false });
+
+    function endPointer(e) {
+      if (!pointers.has(e.pointerId)) return;
+      pointers.delete(e.pointerId);
+      try { stage.releasePointerCapture(e.pointerId); } catch(err){}
+      if (pointers.size === 0) {
+        gestureTarget = null;
+        startState = null;
+        saveProject(); 
+      } else {
+        beginGesture(gestureTarget);
+      }
+    }
+    
+    stage.addEventListener("pointerup", endPointer, { passive:true });
+    stage.addEventListener("pointercancel", endPointer, { passive:true });
+
+    async function fileToInkCanvas(file) {
+      const img = new Image();
+      img.decoding = "async";
+      img.src = URL.createObjectURL(file);
+      await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
+
+      const c = document.createElement("canvas");
+      c.width = img.naturalWidth;
+      c.height = img.naturalHeight;
+
+      const ctx = c.getContext("2d", { willReadFrequently: true });
+      ctx.drawImage(img, 0, 0);
+
+      const imageData = ctx.getImageData(0, 0, c.width, c.height);
+      const d = imageData.data;
+      const gamma = 1.0; 
+
+      for (let i = 0; i < d.length; i += 4) {
+        const r = d[i], g = d[i+1], b = d[i+2], a = d[i+3];
+        const lum = (0.2126*r + 0.7152*g + 0.0722*b) / 255;
+        
+        let ink = (1 - lum) * 1.15; 
+        ink = Math.pow(Math.max(0, Math.min(1, ink)), gamma);
+
+        d[i] = 0; d[i+1] = 0; d[i+2] = 0;
+        d[i+3] = Math.round(a * ink);
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+      return c;
+    }
+
+    function openModal(){
+      if(!document.getElementById("bodyPlacementPreview")){
+        alert("Upload body image first / Lataa ensin kehon kuva");
+        return;
+      }
+      modalBackdrop.style.display = "flex";
+      textInput.focus();
+      renderFontGrid();
+    }
+    
+    function closeModal(){ modalBackdrop.style.display = "none"; }
+
+    function renderFontGrid(){
+      fontGrid.innerHTML = "";
+      const sample = () => (textInput.value.trim() || "Family First");
+      for(const f of FONTS){
+        const card = document.createElement("div");
+        card.className = "fontCard" + (f.family === selectedFontFamily ? " selectedFont" : "");
+        card.addEventListener("click", () => { selectedFontFamily = f.family; renderFontGrid(); });
+
+        const name = document.createElement("div");
+        name.className = "fontName";
+        name.textContent = f.name;
+
+        const preview = document.createElement("div");
+        preview.className = "fontPreview";
+        preview.style.fontFamily = f.family;
+        preview.textContent = sample();
+
+        card.appendChild(name);
+        card.appendChild(preview);
+        fontGrid.appendChild(card);
+      }
+    }
+
+    addTextAskBtn.addEventListener("click", openModal);
+    closeModalBtn.addEventListener("click", closeModal);
+    cancelBtn.addEventListener("click", closeModal);
+    modalBackdrop.addEventListener("click", (e) => { if(e.target === modalBackdrop) closeModal(); });
+    textInput.addEventListener("input", renderFontGrid);
+
+    addTextBtn.addEventListener("click", () => {
+      const text = textInput.value.trim();
+      if(!text){
+        alert("Type text / Kirjoita teksti");
+        return;
+      }
+      const wrap = document.createElement("div");
+      wrap.className = "overlay";
+      initTransform(wrap);
+
+      const layer = document.createElement("div");
+      layer.className = "textOverlay";
+      layer.textContent = text;
+      layer.style.fontFamily = selectedFontFamily;
+      layer.dataset.fontFamily = selectedFontFamily;
+
+      wrap.appendChild(layer);
+      stage.appendChild(wrap);
+      
+      setActiveOverlay(wrap); 
+      closeModal();
+      saveProject(); 
+    });
+
+    addMoreAskBtn.addEventListener("click", () => {
+      if(!document.getElementById("bodyPlacementPreview")){
+        alert("Create preview first / Luo esikatselu ensin");
+        return;
+      }
+      addMoreInput.click();
+    });
+
+    addMoreInput.addEventListener("change", async (e) => {
+      const files = Array.from(e.target.files || []);
+      for(const file of files){
+        const inkCanvas = await fileToInkCanvas(file);
+        inkCanvas.className = "tattooCanvas";
+
+        const wrap = document.createElement("div");
+        wrap.className = "overlay";
+        initTransform(wrap);
+        wrap.appendChild(inkCanvas);
+
+        stage.appendChild(wrap);
+        setActiveOverlay(wrap);
+      }
+      e.target.value = ""; 
+      saveProject(); 
+    });
+
+    function waitImageLoad(img){
+      return new Promise((resolve) => {
+        if (img.complete && img.naturalWidth) return resolve();
+        img.onload = () => resolve();
+        img.onerror = () => resolve();
+      });
+    }
+
+    createBtn.addEventListener("click", async () => {
+      const body = bodyInput.files[0];
+      if(!body){
+        alert("Please upload a body image / Lataa kehon kuva");
+        return;
+      }
+
+      stage.innerHTML = "";
+      setActiveOverlay(null);
+
+      const base = document.createElement("img");
+      base.src = URL.createObjectURL(body);
+      base.id = "bodyPlacementPreview";
+      base.alt = "Body Placement";
+      stage.appendChild(base);
+
+      await waitImageLoad(base);
+
+      const tattoos = Array.from(tattooInput.files || []);
+      const maxCount = 12;
+      let lastWrap = null;
+      for(const file of tattoos.slice(0, maxCount)){
+        const inkCanvas = await fileToInkCanvas(file);
+        inkCanvas.className = "tattooCanvas";
+
+        const wrap = document.createElement("div");
+        wrap.className = "overlay";
+        initTransform(wrap);
+        wrap.appendChild(inkCanvas);
+
+        stage.appendChild(wrap);
+        lastWrap = wrap;
+      }
+
+      stage.style.display = "block";
+      editorTools.style.display = "block";
+      
+      if(lastWrap) setActiveOverlay(lastWrap);
+      saveProject(); 
+    });
+
+    clearLayersBtn.addEventListener("click", () => {
+      const base = document.getElementById("bodyPlacementPreview");
+      if(!base) return;
+      stage.innerHTML = "";
+      stage.appendChild(base);
+      gestureTarget = null;
+      startState = null;
+      pointers.clear();
+      setActiveOverlay(null);
+      saveProject(); 
+    });
+
+    saveBtn.addEventListener("click", async () => {
+      const base = document.getElementById("bodyPlacementPreview");
+      if(!base){
+        alert("Create preview first / Luo esikatselu ensin");
+        return;
+      }
+
+      const currentActive = activeOverlay;
+      setActiveOverlay(null); 
+
+      try{
+        saveBtn.disabled = true;
+        saveBtn.textContent = "Saving... / Tallennetaan...";
+        await waitImageLoad(base);
+
+        const overlays = Array.from(stage.querySelectorAll(".overlay"));
+        const exportCanvas = buildExportCanvas(base, overlays, stage);
+        drawWatermark(exportCanvas, "Inky Vibes Tattoo");
+
+        const blob = await new Promise(res => exportCanvas.toBlob(res, "image/png", 1.0));
+        if(!blob) throw new Error("Export failed");
+
+        const file = new File([blob], "tattoo-preview.png", { type:"image/png" });
+
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files:[file], title:"Tattoo Preview" });
+        } else {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "tattoo-preview.png";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 10_000);
+        }
+      } catch (e) {
+        alert("Save failed / Tallennus epäonnistui");
+        console.error(e);
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Save Image / Tallenna kuva";
+        setActiveOverlay(currentActive); 
+      }
+    });
+
+    function buildExportCanvas(baseImg, overlays, stageEl){
+      const out = document.createElement("canvas");
+      out.width = baseImg.naturalWidth;
+      out.height = baseImg.naturalHeight;
+      const ctx = out.getContext("2d");
+
+      ctx.drawImage(baseImg, 0, 0, out.width, out.height);
+
+      const stageRect = stageEl.getBoundingClientRect();
+      const sxRatio = out.width / stageRect.width;
+      const syRatio = out.height / stageRect.height;
+
+      for(const wrap of overlays){
+        const tx = Number(wrap.dataset.tx || 0);
+        const ty = Number(wrap.dataset.ty || 0);
+        const sc = Number(wrap.dataset.ts || 1);
+        const sx = Number(wrap.dataset.sx || 1);
+        const sy = Number(wrap.dataset.sy || 1);
+        const rot = (Number(wrap.dataset.tr || 0) * Math.PI) / 180;
+
+        const cx = (stageRect.width / 2 + tx) * sxRatio;
+        const cy = (stageRect.height / 2 + ty) * syRatio;
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(rot);
+        ctx.scale(sc * sx, sc * sy);
+
+        ctx.globalCompositeOperation = "multiply";
+        ctx.filter = "grayscale(1)";
+
+        const tattoo = wrap.querySelector("canvas.tattooCanvas");
+        const textEl = wrap.querySelector(".textOverlay");
+
+        if (tattoo) {
+          const baseW = parseFloat(getComputedStyle(tattoo).width) || 120;
+          const aspect = tattoo.height / tattoo.width;
+          const baseH = baseW * aspect;
+
+          const drawW = baseW * sxRatio;
+          const drawH = baseH * syRatio;
+
+          ctx.drawImage(tattoo, -drawW/2, -drawH/2, drawW, drawH);
+        } else if (textEl) {
+          const lines = (textEl.textContent || "").split("\n");
+          const fontFamily = textEl.dataset.fontFamily || "Arial";
+          const fontSizeCss = parseFloat(getComputedStyle(textEl).fontSize) || 40;
+          const lineHeightCss = fontSizeCss * 1.05;
+
+          const fontPx = fontSizeCss * sxRatio;
+          const linePx = lineHeightCss * sxRatio;
+
+          ctx.globalAlpha = 0.88;
+          ctx.fillStyle = "#111";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.font = `${fontPx}px ${fontFamily}`;
+
+          const totalH = (lines.length - 1) * linePx;
+          for (let i = 0; i < lines.length; i++){
+            const y = (i * linePx) - totalH / 2;
+            ctx.fillText(lines[i], 0, y);
+          }
+        }
+
+        ctx.restore();
+      }
+
+      ctx.globalCompositeOperation = "source-over";
+      ctx.filter = "none";
+      ctx.globalAlpha = 1;
+
+      return out;
+    }
+
+    function drawWatermark(canvas, text){
+      const ctx = canvas.getContext("2d");
+      const pad = Math.max(14, Math.floor(canvas.width * 0.02));
+      const fontSize = Math.max(18, Math.floor(canvas.width * 0.035));
+      ctx.save();
+      ctx.font = `900 ${fontSize}px Arial, sans-serif`;
+      ctx.textAlign = "right";
+      ctx.textBaseline = "bottom";
+      ctx.globalAlpha = 0.35;
+      ctx.fillStyle = "#000";
+      ctx.fillText(text, canvas.width - pad, canvas.height - pad);
+      ctx.restore();
+    }
+
+    renderFontGrid();
+    window.addEventListener("DOMContentLoaded", loadProject);
+
+  </script>
+</body>
+</html>

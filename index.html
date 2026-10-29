@@ -62,17 +62,58 @@
 
     input[type=file]{ width:100%; font-size: 11px; }
 
-    .btn{
-      background:linear-gradient(to right,blue,pink,purple);
-      border:none; color:white;
-      padding:10px; width:100%;
-      font-size:var(--btn);
-      border-radius:10px;
-      cursor:pointer; margin-top:8px;
+    /* --- LIQUID GLASS NEON BUTTON STYLES --- */
+    .btn {
+      position: relative;
+      background: rgba(80, 80, 80, 0.2); 
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.15); 
+      color: white;
+      padding: 10px;
+      width: 100%;
+      font-size: var(--btn);
+      border-radius: 12px;
+      cursor: pointer;
+      margin-top: 8px;
       display: block;
+      z-index: 1;
+      font-weight: 600;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); 
     }
-    .btn.secondary{ background:#111; }
-    .btn:disabled{ opacity:.6; cursor:not-allowed; }
+
+    .btn::before {
+      content: "";
+      position: absolute;
+      inset: -3px; 
+      border-radius: 15px;
+      background: linear-gradient(90deg, #4facfe, #00f2fe, #f093fb, #f5576c, #ff9a44);
+      z-index: -2;
+      filter: blur(6px); 
+    }
+
+    .btn::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      background: rgba(40, 40, 40, 0.65); 
+      z-index: -1;
+    }
+
+    .btn:disabled { 
+      opacity: 0.6; 
+      cursor: not-allowed; 
+    }
+
+    .btn.secondary { 
+      background: rgba(40, 40, 40, 0.4); 
+      border-color: rgba(255, 255, 255, 0.05);
+    }
+    .btn.secondary::before {
+      display: none; 
+    }
+    /* --------------------------------------- */
 
     .action-row {
       display: flex;

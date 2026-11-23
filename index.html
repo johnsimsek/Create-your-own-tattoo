@@ -76,13 +76,13 @@
 
     input[type=file]{ width:100%; font-size: 11px; }
 
-    /* --- LIQUID GLASS NEON BUTTON STYLES --- */
+    /* --- DARKER LIQUID GLASS NEON BUTTON STYLES --- */
     .btn {
       position: relative;
-      background: rgba(80, 80, 80, 0.2); 
+      background: rgba(15, 15, 15, 0.85); 
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.15); 
+      border: 1px solid rgba(255, 255, 255, 0.14); 
       color: white;
       padding: 10px;
       width: 100%;
@@ -93,7 +93,7 @@
       display: block;
       z-index: 1;
       font-weight: 600;
-      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); 
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9); 
     }
 
     .btn::before {
@@ -111,7 +111,7 @@
       position: absolute;
       inset: 0;
       border-radius: 12px;
-      background: rgba(40, 40, 40, 0.65); 
+      background: rgba(12, 12, 12, 0.88); 
       z-index: -1;
     }
 
@@ -121,11 +121,14 @@
     }
 
     .btn.secondary { 
-      background: rgba(40, 40, 40, 0.4); 
-      border-color: rgba(255, 255, 255, 0.05);
+      background: rgba(18, 18, 18, 0.92); 
+      border-color: rgba(255, 255, 255, 0.1);
     }
     .btn.secondary::before {
       display: none; 
+    }
+    .btn.secondary::after {
+      background: rgba(18, 18, 18, 0.92);
     }
     /* --------------------------------------- */
 
@@ -141,7 +144,7 @@
 
     #editorTools { display:none; }
 
-    /* Compact Stretch Controls */
+    /* Compact Size & Stretch Controls */
     #stretchControls {
       display: none; 
       background: #f4f0ff;
@@ -168,8 +171,8 @@
       margin: 0;
       font-size: 11px;
       font-weight: 800;
-      width: 14px;
-      text-align: center;
+      width: 34px;
+      text-align: left;
       color: #7a4dff;
     }
     .stretch-row input[type=range] {
@@ -191,6 +194,28 @@
       user-select: none;
       -webkit-user-select: none;
       touch-action: none;
+    }
+
+    #removeBodyBtn{
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      z-index: 30;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.25);
+      background: rgba(15, 15, 15, 0.8);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 900;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
     }
 
     #bodyPlacementPreview{
@@ -235,7 +260,7 @@
     .textOverlay{
       color:#111;
       opacity:.88;
-      padding:4px 8px;
+      padding:10px 16px;
       border-radius:8px;
       background:transparent;
       white-space:pre;
@@ -299,7 +324,7 @@
       padding:8px;
       border:1px solid #ddd;
       border-radius:8px;
-      font-size:11px;
+      font-size:12px;
       min-height:48px;
       margin-top:8px;
       resize:vertical;
@@ -310,7 +335,7 @@
       grid-template-columns:1fr 1fr;
       gap:8px;
       margin-top:10px;
-      max-height: 42vh;
+      max-height: 46vh;
       overflow:auto;
       -webkit-overflow-scrolling:touch;
     }
@@ -385,9 +410,13 @@
 
     <div id="editorTools">
       
-      <!-- STRETCH SECTION AT THE TOP -->
+      <!-- SIZE & STRETCH SECTION AT THE TOP -->
       <div id="stretchControls">
-        <div class="stretch-header">Stretch / Venytä</div>
+        <div class="stretch-header">Size &amp; Stretch / Koko &amp; Venytys</div>
+        <div class="stretch-row">
+          <label>Koko</label>
+          <input type="range" id="scaleSlider" min="0.2" max="5" step="0.05" value="1" />
+        </div>
         <div class="stretch-row">
           <label>W</label>
           <input type="range" id="stretchX" min="0.3" max="3" step="0.05" value="1" />
@@ -428,16 +457,15 @@
   <div class="modalBackdrop" id="modalBackdrop">
     <div class="modal">
       <div class="modalHeader">
-        <h2>Add Text / Lisää teksti</h2>
+        <h2>Lisää teksti / Add Text</h2>
         <button class="close" id="closeModalBtn">✕</button>
       </div>
 
-      <textarea id="textInput" placeholder="Type text... / Kirjoita teksti..."></textarea>
+      <textarea id="textInput" placeholder="Kirjoita teksti ja valitse fontti alta... / Type text and tap a font..."></textarea>
       <div class="fontGrid" id="fontGrid"></div>
 
       <div class="modalActions">
         <button class="btn secondary" type="button" id="cancelBtn">Cancel / Peru</button>
-        <button class="btn" type="button" id="addTextBtn">Add Text / Lisää teksti</button>
       </div>
     </div>
   </div>
@@ -458,6 +486,7 @@
     const addMoreInput = document.getElementById("addMoreInput");
     
     const stretchControls = document.getElementById("stretchControls");
+    const scaleSlider = document.getElementById("scaleSlider");
     const stretchXInput = document.getElementById("stretchX");
     const stretchYInput = document.getElementById("stretchY");
     let activeOverlay = null;
@@ -465,7 +494,6 @@
     const modalBackdrop = document.getElementById("modalBackdrop");
     const closeModalBtn = document.getElementById("closeModalBtn");
     const cancelBtn = document.getElementById("cancelBtn");
-    const addTextBtn = document.getElementById("addTextBtn");
     const textInput = document.getElementById("textInput");
     const fontGrid = document.getElementById("fontGrid");
 
@@ -482,6 +510,35 @@
       { name: "Playfair Display", family: "Playfair Display, serif" }
     ];
     let selectedFontFamily = FONTS[0].family;
+
+    function addRemoveBodyButton() {
+      const existing = document.getElementById("removeBodyBtn");
+      if (existing) existing.remove();
+
+      const btn = document.createElement("button");
+      btn.id = "removeBodyBtn";
+      btn.type = "button";
+      btn.textContent = "✕";
+      btn.title = "Poista kuva / Remove image";
+      btn.addEventListener("pointerdown", (e) => e.stopPropagation());
+      btn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        if (confirm("Haluatko varmasti poistaa kuvan? / Are you sure you want to delete this image?")) {
+          stage.innerHTML = "";
+          setActiveOverlay(null);
+          gestureTarget = null;
+          startState = null;
+          pointers.clear();
+          stage.style.display = "none";
+          editorTools.style.display = "none";
+          uploadSection.style.display = "block";
+          bodyInput.value = "";
+          tattooInput.value = "";
+          await saveProject();
+        }
+      });
+      stage.appendChild(btn);
+    }
 
     // --- NEW INDEXED DB SAVING SYSTEM (Bypasses 5MB Limit) ---
     function initDB() {
@@ -555,6 +612,7 @@
           base.src = data.body;
           base.id = "bodyPlacementPreview";
           stage.appendChild(base);
+          addRemoveBodyButton();
           await waitImageLoad(base);
           
           for (const item of data.items) {
@@ -630,12 +688,20 @@
       if (activeOverlay) {
         activeOverlay.classList.add("active-overlay");
         stretchControls.style.display = "flex"; 
+        scaleSlider.value = activeOverlay.dataset.ts || 1;
         stretchXInput.value = activeOverlay.dataset.sx || 1;
         stretchYInput.value = activeOverlay.dataset.sy || 1;
       } else {
         stretchControls.style.display = "none";
       }
     }
+
+    scaleSlider.addEventListener("input", (e) => {
+      if (!activeOverlay) return;
+      activeOverlay.dataset.ts = e.target.value;
+      applyTransform(activeOverlay);
+    });
+    scaleSlider.addEventListener("change", saveProject);
 
     stretchXInput.addEventListener("input", (e) => {
       if (!activeOverlay) return;
@@ -685,8 +751,16 @@
         const p = pts[0];
         const dx = p.x - startState.p1.x;
         const dy = p.y - startState.p1.y;
-        gestureTarget.dataset.tx = String(startState.tx + dx);
-        gestureTarget.dataset.ty = String(startState.ty + dy);
+
+        const stageRect = stage.getBoundingClientRect();
+        const maxX = Math.max(0, stageRect.width / 2 - 15);
+        const maxY = Math.max(0, stageRect.height / 2 - 15);
+
+        const clampedX = Math.max(-maxX, Math.min(maxX, startState.tx + dx));
+        const clampedY = Math.max(-maxY, Math.min(maxY, startState.ty + dy));
+
+        gestureTarget.dataset.tx = String(clampedX);
+        gestureTarget.dataset.ty = String(clampedY);
         applyTransform(gestureTarget);
         return;
       }
@@ -698,12 +772,18 @@
       const scale = startState.d ? (d / startState.d) : 1;
       const rot = startState.a != null ? ((a - startState.a) * 180 / Math.PI) : 0;
 
-      gestureTarget.dataset.ts = String(Math.max(0.15, Math.min(8, startState.ts * scale)));
+      const newScale = Math.max(0.2, Math.min(5, startState.ts * scale));
+      gestureTarget.dataset.ts = String(newScale);
       gestureTarget.dataset.tr = String(startState.tr + rot);
+      if (activeOverlay === gestureTarget) {
+        scaleSlider.value = newScale;
+      }
       applyTransform(gestureTarget);
     }
 
     stage.addEventListener("pointerdown", (e) => {
+      if (e.target.closest && e.target.closest("#removeBodyBtn")) return;
+
       const overlay = e.target.closest ? e.target.closest(".overlay") : null;
       
       if (!overlay) {
@@ -805,13 +885,41 @@
     
     function closeModal(){ modalBackdrop.style.display = "none"; }
 
+    function addTextWithFont(fontFamily) {
+      const text = textInput.value.trim();
+      if(!text){
+        alert("Kirjoita ensin teksti / Type text first");
+        textInput.focus();
+        return;
+      }
+      selectedFontFamily = fontFamily;
+
+      const wrap = document.createElement("div");
+      wrap.className = "overlay";
+      initTransform(wrap);
+
+      const layer = document.createElement("div");
+      layer.className = "textOverlay";
+      layer.textContent = text;
+      layer.style.fontFamily = fontFamily;
+      layer.dataset.fontFamily = fontFamily;
+
+      wrap.appendChild(layer);
+      stage.appendChild(wrap);
+      
+      setActiveOverlay(wrap); 
+      textInput.value = "";
+      closeModal();
+      saveProject(); 
+    }
+
     function renderFontGrid(){
       fontGrid.innerHTML = "";
       const sample = () => (textInput.value.trim() || "Family First");
       for(const f of FONTS){
         const card = document.createElement("div");
         card.className = "fontCard" + (f.family === selectedFontFamily ? " selectedFont" : "");
-        card.addEventListener("click", () => { selectedFontFamily = f.family; renderFontGrid(); });
+        card.addEventListener("click", () => addTextWithFont(f.family));
 
         const name = document.createElement("div");
         name.className = "fontName";
@@ -833,30 +941,6 @@
     cancelBtn.addEventListener("click", closeModal);
     modalBackdrop.addEventListener("click", (e) => { if(e.target === modalBackdrop) closeModal(); });
     textInput.addEventListener("input", renderFontGrid);
-
-    addTextBtn.addEventListener("click", () => {
-      const text = textInput.value.trim();
-      if(!text){
-        alert("Type text / Kirjoita teksti");
-        return;
-      }
-      const wrap = document.createElement("div");
-      wrap.className = "overlay";
-      initTransform(wrap);
-
-      const layer = document.createElement("div");
-      layer.className = "textOverlay";
-      layer.textContent = text;
-      layer.style.fontFamily = selectedFontFamily;
-      layer.dataset.fontFamily = selectedFontFamily;
-
-      wrap.appendChild(layer);
-      stage.appendChild(wrap);
-      
-      setActiveOverlay(wrap); 
-      closeModal();
-      saveProject(); 
-    });
 
     addMoreAskBtn.addEventListener("click", () => {
       if(!document.getElementById("bodyPlacementPreview")){
@@ -907,6 +991,7 @@
       base.id = "bodyPlacementPreview";
       base.alt = "Body Placement";
       stage.appendChild(base);
+      addRemoveBodyButton();
 
       await waitImageLoad(base);
 
@@ -937,8 +1022,7 @@
     clearLayersBtn.addEventListener("click", () => {
       const base = document.getElementById("bodyPlacementPreview");
       if(!base) return;
-      stage.innerHTML = "";
-      stage.appendChild(base);
+      stage.querySelectorAll(".overlay").forEach(el => el.remove());
       gestureTarget = null;
       startState = null;
       pointers.clear();

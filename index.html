@@ -60,6 +60,11 @@
       line-height:1.32;
     }
 
+    .sub a{
+      color:inherit;
+      text-decoration:underline;
+    }
+
     input[type=file]{ width:100%; font-size: 11px; }
 
     /* --- LIQUID GLASS NEON BUTTON STYLES --- */
@@ -176,6 +181,7 @@
       min-height: 50vh;
       user-select: none;
       -webkit-user-select: none;
+      touch-action: none;
     }
 
     #bodyPlacementPreview{
@@ -183,8 +189,10 @@
       height:auto;
       display:block;
       user-select:none;
+      -webkit-user-select:none;
       -webkit-user-drag:none;
       pointer-events:none;
+      touch-action:none;
     }
 
     .overlay{
@@ -193,9 +201,10 @@
       left:50%;
       transform:translate(-50%,-50%) translate(0px,0px) rotate(0deg) scale(1, 1);
       will-change:transform;
+      mix-blend-mode:multiply;
       user-select:none;
       -webkit-user-drag:none;
-      touch-action: auto; 
+      touch-action: none; 
       border-radius: 8px;
     }
 
@@ -208,7 +217,6 @@
       width:120px; /* Zoomed out further */
       height:auto;
       border-radius:8px;
-      mix-blend-mode:multiply;
       filter:grayscale(100%);
       background:transparent;
       pointer-events:auto;
@@ -220,11 +228,10 @@
       opacity:.88;
       padding:4px 8px;
       border-radius:8px;
-      background:rgba(255,255,255,.10);
+      background:transparent;
       white-space:pre;
       line-height:1.05;
       font-size: var(--overlayText);
-      mix-blend-mode:multiply;
       filter:grayscale(100%);
       pointer-events:auto;
       user-select: none;
@@ -339,29 +346,31 @@
 
 <body>
   <div class="container">
-    <h1>Tattoo Preview / Tatuoinnin esikatselu</h1>
+    <div id="uploadSection">
+      <h1>Tattoo Preview / Tatuoinnin esikatselu</h1>
 
-    <label>
-      Upload Body Placement Image
-      <span class="sub">
-        <strong>Lataa kehon kuva</strong> – kuva siitä kohdasta mihin tatuointi tulee (esim. käsivarsi, ranne, jalka).<br>
-        Vinkki: ota kuva hyvässä valossa, suoraan edestä.
-      </span>
-    </label>
-    <input type="file" id="bodyPlacement" accept="image/*" />
+      <label>
+        Upload Body Placement Image
+        <span class="sub">
+          <strong>Lataa kehon kuva</strong> – kuva siitä kohdasta mihin tatuointi tulee (esim. käsivarsi, ranne, jalka).<br>
+          Vinkki: ota kuva hyvässä valossa, suoraan edestä.
+        </span>
+      </label>
+      <input type="file" id="bodyPlacement" accept="image/*" />
 
-    <label>
-      Upload Tattoo Reference Images (optional)
-      <span class="sub">
-        <strong>Lataa tatuointikuvat - ideat / inspiraatiokuvat.</strong><br>
-        Voit valita useita kuvia. Inspiraatiota löytyy esim. Pinterestistä.
-      </span>
-    </label>
-    <input type="file" id="tattooReferences" accept="image/*" multiple />
+      <label>
+        Upload Tattoo Reference Images (optional)
+        <span class="sub">
+          <strong>Lataa tatuointikuvat - ideat / inspiraatiokuvat.</strong><br>
+          Voit valita useita kuvia. Inspiraatiota löytyy esim. <a href="https://www.pinterest.com/ideas/pinterest-tattoo-ideas/927537746794/" target="_blank" rel="noopener noreferrer">Pinterestistä</a>.
+        </span>
+      </label>
+      <input type="file" id="tattooReferences" accept="image/*" multiple />
 
-    <button class="btn" type="button" id="createBtn">
-      Create Preview <span class="sub" style="color:rgba(255,255,255,.85)">Luo esikatselu</span>
-    </button>
+      <button class="btn" type="button" id="createBtn">
+        Create Preview <span class="sub" style="color:rgba(255,255,255,.85)">Luo esikatselu</span>
+      </button>
+    </div>
 
     <div id="previewStage" style="display:none;"></div>
 
@@ -382,17 +391,17 @@
 
       <div class="action-row">
         <button class="btn secondary" type="button" id="addTextAskBtn">
-          + Add Text
+          + Lisää teksti
         </button>
         <button class="btn secondary" type="button" id="addMoreAskBtn">
-          + Add Image
+          + Lisää kuva
         </button>
       </div>
       
       <input type="file" id="addMoreInput" accept="image/*" multiple style="display:none;" />
       
       <span class="sub" style="margin-top: 10px;">
-        <strong>Ohje:</strong> Paina kuvaa valitaksesi sen. <strong>Vain valittua kuvaa voi siirtää.</strong> Näin sivu rullaa normaalisti, kun kosket taustaa! Tuplanapauta poistaaksesi kuvan.
+        <strong>Ohje:</strong> Paina kuvaa valitaksesi sen. <strong>Vain valittua kuvaa voi siirtää.</strong> Tuplanapauta poistaaksesi kuvan.
       </span>
 
       <div class="action-row">
@@ -425,6 +434,7 @@
   </div>
 
   <script>
+    const uploadSection = document.getElementById("uploadSection");
     const stage = document.getElementById("previewStage");
     const editorTools = document.getElementById("editorTools");
 
@@ -572,6 +582,7 @@
             stage.appendChild(wrap);
           }
           
+          uploadSection.style.display = "none";
           stage.style.display = "block";
           editorTools.style.display = "block";
         };
@@ -906,6 +917,7 @@
         lastWrap = wrap;
       }
 
+      uploadSection.style.display = "none";
       stage.style.display = "block";
       editorTools.style.display = "block";
       

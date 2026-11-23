@@ -91,6 +91,7 @@
       cursor: pointer;
       margin-top: 8px;
       display: block;
+      text-align: center;
       z-index: 1;
       font-weight: 600;
       text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9); 
@@ -387,7 +388,7 @@
     }
     .selectedFont{ border:2px solid #111; background:#f0f0f0; }
     .modalActions{ display:flex; gap:8px; margin-top:10px; }
-    .modalActions .btn{ margin-top:0; }
+    .modalActions .btn{ margin-top:0; margin-bottom:0; flex:1; }
 
     @media (max-width: 480px){
       .fontGrid{ grid-template-columns: 1fr; }
@@ -495,7 +496,7 @@
       <p class="confirmSub">Would you like to change the tattoo placement?</p>
       <div class="modalActions">
         <button class="btn secondary" type="button" id="cancelChangeBodyBtn">Cancel / Peru</button>
-        <button class="btn" type="button" id="confirmChangeBodyBtn">Change / Vaihda</button>
+        <label for="changeBodyInput" class="btn" id="confirmChangeBodyBtn">Change / Vaihda</label>
       </div>
     </div>
   </div>
@@ -572,10 +573,10 @@
 
     confirmChangeBodyBtn.addEventListener("click", () => {
       changeBodyModal.style.display = "none";
-      changeBodyInput.click();
     });
 
     changeBodyInput.addEventListener("change", async (e) => {
+      changeBodyModal.style.display = "none";
       const file = e.target.files && e.target.files[0];
       if (!file) return;
 
